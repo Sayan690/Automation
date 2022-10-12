@@ -11,8 +11,12 @@ import subprocess
 class Venom:
 	def __init__(self):
 		try:
-			self.check_msf()
 			self.args()
+			if ".msf.present" not in subprocess.getoutput("ls -al ~").split():
+				self.check_msf()
+
+			else:
+				printf("Metasploit is present.")
 			self.generate()
 
 		except KeyboardInterrupt:
@@ -37,11 +41,11 @@ class Venom:
 				print(list)
 				sys.exit()
 		parser.add_argument(metavar="LHOST", dest="lhost", help="Local ip address.")
-		parser.add_argument("-p", "--payload", metavar="", help="Payload for creating the shell code.", choices=["win32", "win64", "lin32", "lin64"], required=True)
+		parser.add_argument("-p", "--payload", metavar="", help="Payload for creating the shell code. (default - win64)", choices=["win32", "win64", "lin32", "lin64"], default="win64")
 		parser.add_argument("-t", "--type", metavar="", help="Type of the payload. (default - meterpreter/reverse_tcp)", default="meterpreter/reverse_tcp")
 		parser.add_argument("--lport", help="Local port for listening. (default - 4444)", default=4444, type=int)
 		parser.add_argument("--exit-func", metavar="", help="Exit Func.", dest="ef")
-		parser.add_argument("-f", "--format", help="Format of the payload.", metavar="")
+		parser.add_argument("-f", "--format", help="Format of the payload.", metavar="", default="raw")
 		parser.add_argument("-e", "--encoder", help="The encoder to use.", metavar="")
 		parser.add_argument("-i", "--iterations", help="The number of times to encode the payload.", metavar="", type=int, default=1)
 		parser.add_argument("-s", "--space", metavar="", help="The maximum size of the resulting payload.", type=int)
@@ -113,6 +117,7 @@ class Venom:
 
 		if len(msf) > 1 and s:
 			printf('Metasploit is present.')
+			os.system("touch ~/.msf.present")
 
 		elif len(msf) > 1 and not s:
 			error("MSFVENOM is not present.")
@@ -150,7 +155,7 @@ class Venom:
 			args.append("-o %s" % self.args.output)
 
 		else:
-			if self.args.format:
+			if self.args.format and self.args.format != "raw":
 				args.append("-o shell-code.%s" % self.args.format)
 
 			else:
